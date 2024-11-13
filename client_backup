@@ -23,19 +23,20 @@ void request_action(client *current_user, int refresh, CLIENT *handle) {
 		perror("");
 		return;
 	}
-	current_user->auth_token = auth->auth_token;
+	current_user->auth_token = auth->auth_token.auth_token_val;
 	printf("%s\n", current_user->auth_token);
 
 	access = malloc(sizeof(req_access_param));
-	access->id = current_user->id;
-	access->auth_token = current_user->auth_token;
+	access->id.id_val = current_user->id;
+	access->id.id_len = strlen(current_user->id);
+	access->auth_token.auth_token_val = current_user->auth_token;
+	access->auth_token.auth_token_len = strlen(current_user->auth_token);
 	access_return = req_access_1(access, handle);
 	if (access_return == NULL) {
 		perror("");
 		return;
 	}
-	current_user->access_token = access_return->access_token;
-	printf("%s\n", current_user->access_token);
+	current_user->access_token = access_return->access_token.access_token_val;
 	
 	approve = approve_token_1(&current_user->access_token, handle);
 	if (approve == NULL) {
@@ -60,7 +61,7 @@ void parse_action(char *action, client **clients, int *nr_clients, CLIENT *handl
 			(*nr_clients)++;
 		}
 		current_user.id = token;
-		printf("%s\n",current_user.id);
+		printf("%s",current_user.id);
 		token = strtok(NULL, ",");
 		if (token != NULL) {
 			if (strcmp(REQUEST, token) == 0) {

@@ -10,11 +10,9 @@ xdr_req_authorization_return (XDR *xdrs, req_authorization_return *objp)
 {
 	register int32_t *buf;
 
-	 if (!xdr_array (xdrs, (char **)&objp->id.id_val, (u_int *) &objp->id.id_len, 15,
-		sizeof (char), (xdrproc_t) xdr_char))
+	 if (!xdr_string (xdrs, &objp->id, ~0))
 		 return FALSE;
-	 if (!xdr_array (xdrs, (char **)&objp->auth_token.auth_token_val, (u_int *) &objp->auth_token.auth_token_len, 15,
-		sizeof (char), (xdrproc_t) xdr_char))
+	 if (!xdr_string (xdrs, &objp->auth_token, ~0))
 		 return FALSE;
 	return TRUE;
 }
@@ -24,11 +22,9 @@ xdr_req_access_param (XDR *xdrs, req_access_param *objp)
 {
 	register int32_t *buf;
 
-	 if (!xdr_array (xdrs, (char **)&objp->id.id_val, (u_int *) &objp->id.id_len, 15,
-		sizeof (char), (xdrproc_t) xdr_char))
+	 if (!xdr_string (xdrs, &objp->id, ~0))
 		 return FALSE;
-	 if (!xdr_array (xdrs, (char **)&objp->auth_token.auth_token_val, (u_int *) &objp->auth_token.auth_token_len, 15,
-		sizeof (char), (xdrproc_t) xdr_char))
+	 if (!xdr_string (xdrs, &objp->auth_token, ~0))
 		 return FALSE;
 	return TRUE;
 }
@@ -38,14 +34,11 @@ xdr_req_access_return (XDR *xdrs, req_access_return *objp)
 {
 	register int32_t *buf;
 
-	 if (!xdr_array (xdrs, (char **)&objp->id.id_val, (u_int *) &objp->id.id_len, 15,
-		sizeof (char), (xdrproc_t) xdr_char))
+	 if (!xdr_string (xdrs, &objp->id, 15))
 		 return FALSE;
-	 if (!xdr_array (xdrs, (char **)&objp->auth_token.auth_token_val, (u_int *) &objp->auth_token.auth_token_len, 15,
-		sizeof (char), (xdrproc_t) xdr_char))
+	 if (!xdr_string (xdrs, &objp->auth_token, ~0))
 		 return FALSE;
-	 if (!xdr_array (xdrs, (char **)&objp->access_token.access_token_val, (u_int *) &objp->access_token.access_token_len, 15,
-		sizeof (char), (xdrproc_t) xdr_char))
+	 if (!xdr_string (xdrs, &objp->access_token, ~0))
 		 return FALSE;
 	return TRUE;
 }
@@ -59,8 +52,7 @@ xdr_action_param (XDR *xdrs, action_param *objp)
 		 return FALSE;
 	 if (!xdr_string (xdrs, &objp->resource, ~0))
 		 return FALSE;
-	 if (!xdr_array (xdrs, (char **)&objp->access_token.access_token_val, (u_int *) &objp->access_token.access_token_len, 15,
-		sizeof (char), (xdrproc_t) xdr_char))
+	 if (!xdr_string (xdrs, &objp->access_token, ~0))
 		 return FALSE;
 	return TRUE;
 }
@@ -70,12 +62,9 @@ xdr_approve_req_token_return (XDR *xdrs, approve_req_token_return *objp)
 {
 	register int32_t *buf;
 
-	int i;
-	 if (!xdr_vector (xdrs, (char *)objp->access_token, 15,
-		sizeof (char), (xdrproc_t) xdr_char))
+	 if (!xdr_string (xdrs, &objp->access_token, ~0))
 		 return FALSE;
-	 if (!xdr_array (xdrs, (char **)&objp->permisions.permisions_val, (u_int *) &objp->permisions.permisions_len, ~0,
-		sizeof (char), (xdrproc_t) xdr_char))
+	 if (!xdr_string (xdrs, &objp->permisions, ~0))
 		 return FALSE;
 	 if (!xdr_int (xdrs, &objp->approved))
 		 return FALSE;

@@ -13,8 +13,10 @@ req_auth_1_svc(char **argp, struct svc_req *rqstp)
 	 * insert server code here
 	 */
 	printf("Request authorization for client with id: %s\n", *argp);
-	result.id = *argp;
-	result.auth_token = generate_access_token(*argp);
+	result.id.id_val = *argp;
+	result.id.id_len = strlen(result.id.id_val);
+	result.auth_token.auth_token_val = generate_access_token(*argp);
+	result.auth_token.auth_token_len = strlen(result.auth_token.auth_token_val);
 	
 	return &result;
 }
@@ -27,10 +29,13 @@ req_access_1_svc(req_access_param *argp, struct svc_req *rqstp)
 	/*
 	 * insert server code here
 	 */
-	printf("Request access for client with id: %s and token: %s\n", argp->id, argp->auth_token);
-	result.id = argp->id;
-	result.auth_token = argp->auth_token;
-	result.access_token = generate_access_token(argp->id);
+	printf("Request access for client with id:\n");
+	result.id.id_val = argp->id.id_val;
+	result.id.id_len = argp->id.id_len;
+	result.auth_token.auth_token_val = argp->auth_token.auth_token_val;
+	result.auth_token.auth_token_len = argp->auth_token.auth_token_len;
+	result.access_token.access_token_val = "access_token";
+	result.access_token.access_token_len = 15;
 
 	return &result;
 }
@@ -53,8 +58,7 @@ approve_req_token_return *
 approve_token_1_svc(char **argp, struct svc_req *rqstp)
 {
 	static approve_req_token_return  result;
-	printf("Approved\n");
-	result.access_token = *argp;
+	printf("Approve token for client with");
 	result.approved = 1;
 	
 	/*

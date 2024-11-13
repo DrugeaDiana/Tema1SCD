@@ -15,61 +15,34 @@ extern "C" {
 
 
 struct req_authorization_return {
-	struct {
-		u_int id_len;
-		char *id_val;
-	} id;
-	struct {
-		u_int auth_token_len;
-		char *auth_token_val;
-	} auth_token;
+	char *id;
+	char *auth_token;
 };
 typedef struct req_authorization_return req_authorization_return;
 
 struct req_access_param {
-	struct {
-		u_int id_len;
-		char *id_val;
-	} id;
-	struct {
-		u_int auth_token_len;
-		char *auth_token_val;
-	} auth_token;
+	char *id;
+	char *auth_token;
 };
 typedef struct req_access_param req_access_param;
 
 struct req_access_return {
-	struct {
-		u_int id_len;
-		char *id_val;
-	} id;
-	struct {
-		u_int auth_token_len;
-		char *auth_token_val;
-	} auth_token;
-	struct {
-		u_int access_token_len;
-		char *access_token_val;
-	} access_token;
+	char *id;
+	char *auth_token;
+	char *access_token;
 };
 typedef struct req_access_return req_access_return;
 
 struct action_param {
 	char *operation_type;
 	char *resource;
-	struct {
-		u_int access_token_len;
-		char *access_token_val;
-	} access_token;
+	char *access_token;
 };
 typedef struct action_param action_param;
 
 struct approve_req_token_return {
-	char access_token[15];
-	struct {
-		u_int permisions_len;
-		char *permisions_val;
-	} permisions;
+	char *access_token;
+	char *permisions;
 	int approved;
 };
 typedef struct approve_req_token_return approve_req_token_return;

@@ -1,28 +1,28 @@
 struct req_authorization_return{
-    char id<15>;
-    char auth_token<15>;
+    string id<>;
+    string auth_token<>;
 };
 
 struct req_access_param{
-    char id<15>;
-    char auth_token<15>;
+    string id<>;
+    string auth_token<>;
 };
 
 struct req_access_return{
-    char id<15>;
-    char auth_token<15>;
-    char access_token<15>;
+    string id<15>;
+    string auth_token<>;
+    string access_token<>;
 };
 
 struct action_param{
     string operation_type<>;
     string resource<>;
-    char access_token<15>;
+    string access_token<>;
 };
 
 struct approve_req_token_return{
-    char access_token[15];
-    char permisions<>;
+    string access_token<>;
+    string permisions<>;
     int approved;
 };
 
