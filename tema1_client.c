@@ -36,7 +36,7 @@ void request_action(client *current_user, int refresh, CLIENT *handle) {
 	}
 	current_user->access_token = access_return->access_token;
 	printf("%s\n", current_user->access_token);
-	
+
 	approve = approve_token_1(&current_user->access_token, handle);
 	if (approve == NULL) {
 		perror("");
@@ -67,6 +67,7 @@ void parse_action(char *action, client **clients, int *nr_clients, CLIENT *handl
 				int refresh = atoi(strtok(NULL, ","));
 				if (token != NULL) {
 					request_action(&current_user, refresh, handle);
+					clients[*nr_clients] = &current_user;
 				} else {
 					printf("Invalid request\n");
 				}
