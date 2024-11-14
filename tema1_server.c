@@ -17,6 +17,7 @@ char **resources;
 client **clients;
 char **aproved_tokens;
 int max_valability;
+int nr_clients;
 
 void init_server(int argc, char **argv) {
 	FILE *f_id = fopen(argv[1], "r");
@@ -24,57 +25,64 @@ void init_server(int argc, char **argv) {
 		perror("Error opening file");
 		exit(1);
 	}
-	char *line = malloc(10 * sizeof(char));
-	fgets(line, 10, f_id);
-	int nr_clients = atoi(line);
+	char *line = malloc(20 * sizeof(char));
+	fgets(line, 20, f_id);
+	nr_clients = atoi(line);
 	clients = malloc(nr_clients * sizeof(client*));
 	for (int i = 0; i < nr_clients; i++) {
 		clients[i] = malloc(sizeof(client));
-		fgets(line, 10, f_id);
-		clients[i]->id = malloc(10 * sizeof(char));
-		strcpy(clients[i]->id, line);
+		fgets(line, 17, f_id);
+		clients[i]->id = malloc(17 * sizeof(char));
+		char *token = strtok(line, "\n");
+		strcpy(clients[i]->id, token);
 	}
 	fclose(f_id);
+	free(line);
 
+	char *res_line = malloc(100 * sizeof(char));
 	FILE *f_res = fopen(argv[2], "r");
 	if (f_res == NULL) {
 		perror("Error opening file");
 		exit(1);
 	}
-	line = malloc(10 * sizeof(char));
-	fgets(line, 10, f_res);
-	int nr_res = atoi(line);
+	fgets(res_line, 16, f_res);
+	int nr_res = atoi(res_line);
 	resources = malloc(nr_res * sizeof(char*));
 	for (int i = 0; i < nr_res; i++) {
-		resources[i] = malloc(10 * sizeof(char));
-		fgets(line, 10, f_res);
-		strcpy(resources[i], line);
+		resources[i] = malloc(100 * sizeof(char));
+		fgets(res_line, 100, f_res);
+		strcpy(resources[i], res_line);
 	}
 	fclose(f_res);
+	free(res_line);
 
+	char *aproved_tokens_line = malloc(200 * sizeof(char));
 	FILE *f_aprob = fopen(argv[3], "r");
 	if (f_aprob == NULL) {
 		perror("Error opening file");
 		exit(1);
 	}
-	line = malloc(10 * sizeof(char));
-	fgets(line, 10, f_aprob);
-	int nr_aprob = atoi(line);
+
+	fgets(aproved_tokens_line, 20, f_aprob);
+	int nr_aprob = atoi(aproved_tokens_line);
 	for (int i = 0; i < nr_aprob; i++) {
-		fgets(line, 10, f_aprob);
-		aproved_tokens[i] = malloc(10 * sizeof(char));
-		strcpy(aproved_tokens[i], line);
+		fgets(aproved_tokens_line, 200, f_aprob);
+		aproved_tokens[i] = malloc(200 * sizeof(char));
+		strcpy(aproved_tokens[i], aproved_tokens_line);
 	}
 	fclose(f_aprob);
-	free(line);
+	free(aproved_tokens_line);
 	max_valability = atoi(argv[4]);
 	printf("Server initialized\n");
-
+	for (int i = 0; i < nr_clients; i++) {
+		printf("Clientul: %s\n", clients[i]->id);
+	}
+	printf("\n");
 
 }
 
 client* check_id(char *id) {
-	for (int i = 0; i < sizeof(clients); i++) {
+	for (int i = 0; i < nr_clients; i++) {
 		if (strcmp(clients[i]->id, id) == 0) {
 			return clients[i];
 		}
@@ -91,8 +99,18 @@ req_auth_1_svc(char **argp, struct svc_req *rqstp)
 	 * insert server code here
 	 */
 	
+	client *client = check_id(*argp);
+	if (client == NULL) {
+		printf("USER_NOT_FOUND\n");
+		result.id = *argp;
+		result.auth_token = *argp;
+		result.valid = -1;
+		return &result;
+	}
 	result.id = *argp;
 	result.auth_token = generate_access_token(*argp);
+	result.valid = 1;
+	client->auth_token = result.auth_token;
 	printf("BEGIN %s AUTHZ\n", result.id);
 	printf("\t RequestToken = %s\n", result.auth_token);
 	
@@ -107,12 +125,17 @@ req_access_1_svc(req_access_param *argp, struct svc_req *rqstp)
 	/*
 	 * insert server code here
 	 */
+	client *client = check_id(argp->id);
+	if (client == NULL) {
+		printf("USER_NOT_FOUND\n");
+		return NULL;
+	}
 	result.id = argp->id;
 	result.auth_token = argp->auth_token;
 	result.access_token = generate_access_token(argp->id);
-
+	client->access_token = result.access_token;
 	printf("\t AccessToken = %s\n", result.access_token);
-
+	//printf("client %s with auth %s and access %s\n", client->id, client->auth_token, client->access_token);
 	return &result;
 }
 

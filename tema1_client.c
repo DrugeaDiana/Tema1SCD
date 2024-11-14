@@ -12,7 +12,7 @@ typedef struct{
 	char *access_token;
 } client ;
 
-void request_action(client *current_user, int refresh, CLIENT *handle) {
+int request_action(client *current_user, int refresh, CLIENT *handle) {
 	req_authorization_return *auth;
 	req_access_param *access;
 	req_access_return *access_return;
@@ -23,8 +23,11 @@ void request_action(client *current_user, int refresh, CLIENT *handle) {
 		perror("");
 		return;
 	}
+	if (auth->valid == -1) {
+		printf("USER_NOT_FOUND\n");
+		return -1;
+	}
 	current_user->auth_token = auth->auth_token;
-	printf("%s\n", current_user->auth_token);
 
 	access = malloc(sizeof(req_access_param));
 	access->id = current_user->id;
@@ -35,17 +38,15 @@ void request_action(client *current_user, int refresh, CLIENT *handle) {
 		return;
 	}
 	current_user->access_token = access_return->access_token;
-	printf("%s\n", current_user->access_token);
+	free(access);
 
-	approve = approve_token_1(&current_user->access_token, handle);
-	if (approve == NULL) {
-		perror("");
-		return;
-	}	
+	printf("%s -> %s\n", current_user->id, current_user->access_token);
+	return 1;
 }
 
 void parse_action(char *action, client **clients, int *nr_clients, CLIENT *handle) {
 	client current_user;
+	current_user.id = NULL;
 	char *token = strtok(action, ",");
 	if (token != NULL) {
 		for (int i = 0; i < *nr_clients; i++) {
@@ -57,7 +58,6 @@ void parse_action(char *action, client **clients, int *nr_clients, CLIENT *handl
 		if (current_user.id == NULL) {
 			clients[*nr_clients] = malloc(sizeof(client));
 			clients[*nr_clients]->id = token;
-			(*nr_clients)++;
 		}
 		current_user.id = token;
 		printf("%s\n",current_user.id);
@@ -66,8 +66,13 @@ void parse_action(char *action, client **clients, int *nr_clients, CLIENT *handl
 			if (strcmp(REQUEST, token) == 0) {
 				int refresh = atoi(strtok(NULL, ","));
 				if (token != NULL) {
-					request_action(&current_user, refresh, handle);
+					int ret = request_action(&current_user, refresh, handle);
+					if (ret = -1) {
+						free(clients[*nr_clients]);
+						return;
+					}
 					clients[*nr_clients] = &current_user;
+					(*nr_clients)++;
 				} else {
 					printf("Invalid request\n");
 				}
@@ -105,6 +110,12 @@ int main(int argc, char *argv[]){
 		fgets(action, 100, fin);
 		parse_action(action, &clients, &nr_clients, handle);
 	}
-	
+
+	/*for (int i = 0; i < nr_clients; i++) {
+		free(clients[i].id);
+		free(clients[i].auth_token);
+		free(clients[i].access_token);
+	}
+	free(clients);*/
 	return 0;
 }

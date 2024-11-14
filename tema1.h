@@ -17,6 +17,7 @@ extern "C" {
 struct req_authorization_return {
 	char *id;
 	char *auth_token;
+	int valid;
 };
 typedef struct req_authorization_return req_authorization_return;
 
