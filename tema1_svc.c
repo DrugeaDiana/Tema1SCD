@@ -78,6 +78,8 @@ tema1prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 	return;
 }
 
+extern void init_server(int argc, char **argv);
+
 int
 main (int argc, char **argv)
 {
@@ -105,6 +107,7 @@ main (int argc, char **argv)
 		exit(1);
 	}
 
+	init_server(argc, argv);
 	svc_run ();
 	fprintf (stderr, "%s", "svc_run returned");
 	exit (1);
