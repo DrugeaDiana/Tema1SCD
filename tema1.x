@@ -2,6 +2,7 @@ struct req_authorization_return{
     string id<>;
     string auth_token<>;
     int valid;
+    int approved;
 };
 
 struct req_access_param{

@@ -3,6 +3,7 @@
 #include <time.h> 
 #include <rpc/rpc.h>
 #include "token.h"
+#define NOT_APROVED "*,-\n"
 
 typedef struct {
 	char *id;
@@ -10,6 +11,7 @@ typedef struct {
 	char *access_token;
 	char *refresh_token;
 	int valability;
+	int approved;
 	char *permissions;
 }	client;
 
@@ -18,7 +20,8 @@ client **clients;
 char **aproved_tokens;
 int max_valability;
 int nr_clients;
-
+int request_counter = 0;
+char *aprob_file;
 void init_server(int argc, char **argv) {
 	FILE *f_id = fopen(argv[1], "r");
 	if (f_id == NULL) {
@@ -53,25 +56,11 @@ void init_server(int argc, char **argv) {
 		fgets(res_line, 100, f_res);
 		strcpy(resources[i], res_line);
 	}
+	aprob_file = argv[3];
 	fclose(f_res);
 	free(res_line);
 
-	char *aproved_tokens_line = malloc(200 * sizeof(char));
-	FILE *f_aprob = fopen(argv[3], "r");
-	if (f_aprob == NULL) {
-		perror("Error opening file");
-		exit(1);
-	}
 
-	fgets(aproved_tokens_line, 20, f_aprob);
-	int nr_aprob = atoi(aproved_tokens_line);
-	for (int i = 0; i < nr_aprob; i++) {
-		fgets(aproved_tokens_line, 200, f_aprob);
-		aproved_tokens[i] = malloc(200 * sizeof(char));
-		strcpy(aproved_tokens[i], aproved_tokens_line);
-	}
-	fclose(f_aprob);
-	free(aproved_tokens_line);
 	max_valability = atoi(argv[4]);
 	printf("Server initialized\n");
 	for (int i = 0; i < nr_clients; i++) {
@@ -98,7 +87,7 @@ req_auth_1_svc(char **argp, struct svc_req *rqstp)
 	/*
 	 * insert server code here
 	 */
-	
+	printf("BEGIN %s AUTHZ\n", *argp);
 	client *client = check_id(*argp);
 	if (client == NULL) {
 		printf("USER_NOT_FOUND\n");
@@ -111,9 +100,17 @@ req_auth_1_svc(char **argp, struct svc_req *rqstp)
 	result.auth_token = generate_access_token(*argp);
 	result.valid = 1;
 	client->auth_token = result.auth_token;
-	printf("BEGIN %s AUTHZ\n", result.id);
+
 	printf("\t RequestToken = %s\n", result.auth_token);
-	
+	approve_req_token_return *approve;
+	approve = approve_token_1_svc(&result.auth_token, rqstp);
+	if (approve->approved == 0) {
+		result.approved = 0;
+	} else {
+		result.approved = 1;
+	}
+	client->permissions = approve->permisions;
+	client->approved = result.approved;
 	return &result;
 }
 
@@ -135,7 +132,7 @@ req_access_1_svc(req_access_param *argp, struct svc_req *rqstp)
 	result.access_token = generate_access_token(argp->id);
 	client->access_token = result.access_token;
 	printf("\t AccessToken = %s\n", result.access_token);
-	//printf("client %s with auth %s and access %s\n", client->id, client->auth_token, client->access_token);
+	
 	return &result;
 }
 
@@ -155,13 +152,28 @@ approve_req_token_return *
 approve_token_1_svc(char **argp, struct svc_req *rqstp)
 {
 	static approve_req_token_return  result;
-	printf("Approved\n");
-	result.access_token = *argp;
-	result.approved = 1;
 	
-	/*
-	 * insert server code here
-	 */
-
+	char *aproved_tokens_line = malloc(200 * sizeof(char));
+	FILE *f_aprob = fopen(aprob_file, "r");
+	if (f_aprob == NULL) {
+		perror("Error opening file");
+		exit(1);
+	}
+	int counter = 0;
+	while(counter <= request_counter) {
+		fgets(aproved_tokens_line, 200, f_aprob);
+		counter++;
+	}
+	if (strcmp(aproved_tokens_line, NOT_APROVED)== 0) {
+		result.access_token = *argp;
+		result.permisions = "NONE";
+		result.approved = 0;
+	} else {
+		result.access_token = *argp;
+		result.permisions = aproved_tokens_line;
+		result.approved = 1;
+	}
+	request_counter++;
+	
 	return &result;
 }

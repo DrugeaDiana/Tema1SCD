@@ -18,6 +18,7 @@ struct req_authorization_return {
 	char *id;
 	char *auth_token;
 	int valid;
+	int approved;
 };
 typedef struct req_authorization_return req_authorization_return;
 

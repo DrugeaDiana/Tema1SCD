@@ -16,6 +16,8 @@ xdr_req_authorization_return (XDR *xdrs, req_authorization_return *objp)
 		 return FALSE;
 	 if (!xdr_int (xdrs, &objp->valid))
 		 return FALSE;
+	 if (!xdr_int (xdrs, &objp->approved))
+		 return FALSE;
 	return TRUE;
 }
 
