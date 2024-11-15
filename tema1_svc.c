@@ -24,6 +24,7 @@ tema1prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		req_access_param req_access_1_arg;
 		action_param validate_action_1_arg;
 		char *approve_token_1_arg;
+		req_access_param req_access_refr_1_arg;
 	} argument;
 	char *result;
 	xdrproc_t _xdr_argument, _xdr_result;
@@ -48,7 +49,7 @@ tema1prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 
 	case VALIDATE_ACTION:
 		_xdr_argument = (xdrproc_t) xdr_action_param;
-		_xdr_result = (xdrproc_t) xdr_wrapstring;
+		_xdr_result = (xdrproc_t) xdr_validate_action_return;
 		local = (char *(*)(char *, struct svc_req *)) validate_action_1_svc;
 		break;
 
@@ -56,6 +57,12 @@ tema1prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		_xdr_argument = (xdrproc_t) xdr_wrapstring;
 		_xdr_result = (xdrproc_t) xdr_approve_req_token_return;
 		local = (char *(*)(char *, struct svc_req *)) approve_token_1_svc;
+		break;
+
+	case REQ_ACCESS_REFR:
+		_xdr_argument = (xdrproc_t) xdr_req_access_param;
+		_xdr_result = (xdrproc_t) xdr_req_access_refresh_return;
+		local = (char *(*)(char *, struct svc_req *)) req_access_refr_1_svc;
 		break;
 
 	default:
@@ -106,7 +113,7 @@ main (int argc, char **argv)
 		fprintf (stderr, "%s", "unable to register (TEMA1PROG, TEMA1VERS, tcp).");
 		exit(1);
 	}
-
+	
 	init_server(argc, argv);
 	svc_run ();
 	fprintf (stderr, "%s", "svc_run returned");

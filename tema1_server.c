@@ -14,6 +14,7 @@ typedef struct {
 	int valability;
 	int approved;
 	char *permissions;
+	int refresh;
 }	client;
 
 char **resources;
@@ -138,7 +139,7 @@ req_access_1_svc(req_access_param *argp, struct svc_req *rqstp)
 	client->access_token = result.access_token;
 	client->valability = max_valability;
 	printf("  AccessToken = %s\n", result.access_token);
-	
+	client->refresh = 0;
 	return &result;
 }
 
@@ -151,23 +152,28 @@ int check_resource(char *resource) {
 	return 0;
 }
 
-char **
+validate_action_return *
 validate_action_1_svc(action_param *argp, struct svc_req *rqstp) {
-	static char * result;
+	static validate_action_return result;
 	char *acces_token = argp->access_token;
 	if (strcmp(acces_token, NOT_FOUND) == 0) {
-		result = "PERMISSION_DENIED";
+		result.result = "PERMISSION_DENIED";
 		printf("DENY (%s,%s,,0)\n", argp->operation_type, argp->resource);
 		return &result;
 	}
 	char *id = argp->id;
 	client *client = check_id(id);
 	if (strcmp(client->access_token, acces_token) != 0) {
-		result = "PERMISSION_DENIED";
+		result.result = "PERMISSION_DENIED";
 	} else {
 		//printf("%s -> %d\n", client->id, client->valability);
 		if (client->valability == 0) {
-			result = "TOKEN_EXPIRED";
+			result.result = "TOKEN_EXPIRED";
+			if (client->refresh == 1) {
+				printf("DENY (%s,%s,%s,0)\n", argp->operation_type, argp->resource, acces_token);
+			} else {
+				printf("DENY (%s,%s,%s,0)\n", argp->operation_type, argp->resource, acces_token);
+			}
 			printf("DENY (%s,%s,,0)\n", argp->operation_type, argp->resource);
 			return &result;
 		} else {
@@ -175,7 +181,7 @@ validate_action_1_svc(action_param *argp, struct svc_req *rqstp) {
 			client->valability--;
 			//printf("valability: %d\n", client->valability);
 			if (check_resource(resource) == 0) {
-				result = "RESOURCE_NOT_FOUND";
+				result.result = "RESOURCE_NOT_FOUND";
 			} else {
 				char *operation = argp->operation_type;
 				char *permissions = strdup(client->permissions);
@@ -191,20 +197,20 @@ validate_action_1_svc(action_param *argp, struct svc_req *rqstp) {
 						//printf("operation: %s\n", operation);
 						for (int i = 0; i < strlen(token); i++) {
 							if (token[i] == operation[0]) {
-								result = "PERMISSION_GRANTED";
+								result.result = "PERMISSION_GRANTED";
 								printf("PERMIT (%s,%s,%s,%d)\n", argp->operation_type, argp->resource, acces_token, client->valability);
 								return &result;
 							} else if (strcmp(operation, EXECUTE) == 0) {
 								if (token[i] == operation[1]) {
-									result = "PERMISSION_GRANTED";
+									result.result = "PERMISSION_GRANTED";
 									printf("PERMIT (%s,%s,%s,%d)\n", argp->operation_type, argp->resource, acces_token, client->valability);
 									return &result;
 								}
 							}
 						}
-						result = "OPERATION_NOT_PERMITTED";
+						result.result = "OPERATION_NOT_PERMITTED";
 					} else {
-						result = "OPERATION_NOT_PERMITTED";
+						result.result = "OPERATION_NOT_PERMITTED";
 					}
 					token = strtok(NULL, ",");
 				}
@@ -245,4 +251,31 @@ approve_token_1_svc(char **argp, struct svc_req *rqstp)
 	request_counter++;
 	
 	return &result;
+}
+
+req_access_refresh_return *
+req_access_refr_1_svc(req_access_param *argp, struct svc_req *rqstp)
+{
+	static req_access_refresh_return  result;
+
+	/*
+	 * insert server code here
+	 */
+	client *client = check_id(argp->id);
+	if (client == NULL) {
+		printf("USER_NOT_FOUND\n");
+		return NULL;
+	}
+	result.id = argp->id;
+	result.auth_token = argp->auth_token;
+	result.access_token = generate_access_token(argp->auth_token);
+	client->access_token = result.access_token;
+	client->valability = max_valability;
+	result.refresh_token = generate_access_token(client->access_token);
+	client->refresh_token = result.refresh_token;
+	client->refresh = 1;
+	printf("  AccessToken = %s\n", result.access_token);
+	printf("  RefreshToken = %s\n", result.refresh_token);
+	return &result;
+
 }

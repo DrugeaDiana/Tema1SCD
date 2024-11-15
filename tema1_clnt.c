@@ -39,15 +39,15 @@ req_access_1(req_access_param *argp, CLIENT *clnt)
 	return (&clnt_res);
 }
 
-char **
+validate_action_return *
 validate_action_1(action_param *argp, CLIENT *clnt)
 {
-	static char *clnt_res;
+	static validate_action_return clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
 	if (clnt_call (clnt, VALIDATE_ACTION,
 		(xdrproc_t) xdr_action_param, (caddr_t) argp,
-		(xdrproc_t) xdr_wrapstring, (caddr_t) &clnt_res,
+		(xdrproc_t) xdr_validate_action_return, (caddr_t) &clnt_res,
 		TIMEOUT) != RPC_SUCCESS) {
 		return (NULL);
 	}
@@ -63,6 +63,21 @@ approve_token_1(char **argp, CLIENT *clnt)
 	if (clnt_call (clnt, APPROVE_TOKEN,
 		(xdrproc_t) xdr_wrapstring, (caddr_t) argp,
 		(xdrproc_t) xdr_approve_req_token_return, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}
+
+req_access_refresh_return *
+req_access_refr_1(req_access_param *argp, CLIENT *clnt)
+{
+	static req_access_refresh_return clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, REQ_ACCESS_REFR,
+		(xdrproc_t) xdr_req_access_param, (caddr_t) argp,
+		(xdrproc_t) xdr_req_access_refresh_return, (caddr_t) &clnt_res,
 		TIMEOUT) != RPC_SUCCESS) {
 		return (NULL);
 	}

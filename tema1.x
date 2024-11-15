@@ -16,6 +16,13 @@ struct req_access_return{
     string access_token<>;
 };
 
+struct req_access_refresh_return {
+    string id<15>;
+    string auth_token<>;
+    string access_token<>;
+    string refresh_token<>;
+};
+
 struct action_param{
     string id<>;
     string operation_type<>;
@@ -29,12 +36,19 @@ struct approve_req_token_return{
     int approved;
 };
 
+struct validate_action_return{
+    string id_client<>;
+    string acces_token<>;
+    string refresh_token<>;
+    string result<>;
+};
+
 program TEMA1PROG {
     version TEMA1VERS {
         req_authorization_return REQ_AUTH(string id) = 1;
         req_access_return REQ_ACCESS(req_access_param) = 2;
-        string VALIDATE_ACTION(action_param) = 3;
+        validate_action_return VALIDATE_ACTION(action_param) = 3;
         approve_req_token_return APPROVE_TOKEN(string auth_token) = 4;
-
+        req_access_refresh_return REQ_ACCESS_REFR(req_access_param) = 5;
     } = 1;
 } = 0x31122002;

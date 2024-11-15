@@ -48,6 +48,22 @@ xdr_req_access_return (XDR *xdrs, req_access_return *objp)
 }
 
 bool_t
+xdr_req_access_refresh_return (XDR *xdrs, req_access_refresh_return *objp)
+{
+	register int32_t *buf;
+
+	 if (!xdr_string (xdrs, &objp->id, 15))
+		 return FALSE;
+	 if (!xdr_string (xdrs, &objp->auth_token, ~0))
+		 return FALSE;
+	 if (!xdr_string (xdrs, &objp->access_token, ~0))
+		 return FALSE;
+	 if (!xdr_string (xdrs, &objp->refresh_token, ~0))
+		 return FALSE;
+	return TRUE;
+}
+
+bool_t
 xdr_action_param (XDR *xdrs, action_param *objp)
 {
 	register int32_t *buf;
@@ -73,6 +89,22 @@ xdr_approve_req_token_return (XDR *xdrs, approve_req_token_return *objp)
 	 if (!xdr_string (xdrs, &objp->permisions, ~0))
 		 return FALSE;
 	 if (!xdr_int (xdrs, &objp->approved))
+		 return FALSE;
+	return TRUE;
+}
+
+bool_t
+xdr_validate_action_return (XDR *xdrs, validate_action_return *objp)
+{
+	register int32_t *buf;
+
+	 if (!xdr_string (xdrs, &objp->id_client, ~0))
+		 return FALSE;
+	 if (!xdr_string (xdrs, &objp->acces_token, ~0))
+		 return FALSE;
+	 if (!xdr_string (xdrs, &objp->refresh_token, ~0))
+		 return FALSE;
+	 if (!xdr_string (xdrs, &objp->result, ~0))
 		 return FALSE;
 	return TRUE;
 }

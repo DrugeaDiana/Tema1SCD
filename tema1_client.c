@@ -10,12 +10,14 @@ typedef struct{
 	char *id;
 	char *auth_token;
 	char *access_token;
+	char *refresh_token;
 } client ;
 
 int request_action(client *current_user, int refresh, CLIENT *handle) {
 	req_authorization_return *auth;
 	req_access_param *access;
 	req_access_return *access_return;
+	req_access_refresh_return *access_refresh;
 	approve_req_token_return *approve;
 
 	auth = req_auth_1(&current_user->id, handle);
@@ -32,24 +34,39 @@ int request_action(client *current_user, int refresh, CLIENT *handle) {
 		printf("REQUEST_DENIED\n");
 		return -2;
 	}
+	free(auth);
+
 	access = malloc(sizeof(req_access_param));
 	access->id = current_user->id;
 	access->auth_token = current_user->auth_token;
-	access_return = req_access_1(access, handle);
-	if (access_return == NULL) {
-		perror("");
-		return -3;
-	}
-	current_user->access_token = access_return->access_token;
-	free(access);
+	if (refresh == 0) {
+		access_return = req_access_1(access, handle);
+		if (access_return == NULL) {
+			perror("");
+			return -3;
+		}
+		current_user->access_token = access_return->access_token;
 
-	printf("%s -> %s\n", current_user->auth_token, current_user->access_token);
+
+		printf("%s -> %s\n", current_user->auth_token, current_user->access_token);
+	} else {
+		access_refresh = req_access_refr_1(access, handle);
+		if (access_refresh == NULL) {
+			perror("");
+			return -3;
+		}
+		current_user->access_token = access_refresh->access_token;
+		current_user->refresh_token = access_refresh->refresh_token;
+
+		printf("%s -> %s, %s\n", current_user->auth_token, current_user->access_token, current_user->refresh_token);
+	}
+	free(access);
 	return 1;
 }
 
 void validate_action(client *current_user, char *resource, char *operation, CLIENT *handle, int modified) {
 	action_param *action;
-	char **response;
+	validate_action_return *response;
 	action = malloc(sizeof(action_param));
 	action->operation_type = operation;
 	action->resource = resource;
@@ -66,7 +83,7 @@ void validate_action(client *current_user, char *resource, char *operation, CLIE
 		perror("");
 		return;
 	}
-	printf("%s\n", response[0]);
+	printf("%s\n", response->result);
 	free(action);
 }
 
@@ -89,11 +106,11 @@ void parse_action(char *action, client ***clients, int *nr_clients, CLIENT *hand
 		token = strtok(NULL, ",");
 		if (token != NULL) {
 			if (strcmp(REQUEST, token) == 0) {
-				int refresh = atoi(strtok(NULL, ","));
+				int refresh = atoi(strtok(NULL, ",\n"));
 				if (token != NULL) {
 					int ret = request_action(current_user, refresh, handle);
 					if (ret == -1 || ret == -2 || ret == -3) {
-						free(current_user);
+						//free(current_user);
 						free(action);
 						return;
 					} else if (modified == 0) {
