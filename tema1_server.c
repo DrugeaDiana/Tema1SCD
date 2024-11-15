@@ -152,12 +152,30 @@ int check_resource(char *resource) {
 	return 0;
 }
 
+typedef struct {
+	char *refresh;
+	char *access;
+} refresh_change;
+
+refresh_change refresh(char *refresh_token, char *id) {
+	refresh_change result;
+	result.access = generate_access_token(refresh_token);
+	result.refresh = generate_access_token(result.access);
+	printf("BEGIN %s AUTHZ REFRESH\n", id);
+	printf("  AccessToken = %s\n", result.access);
+	printf("  RefreshToken = %s\n", result.refresh);
+	return result;
+}
+
 validate_action_return *
 validate_action_1_svc(action_param *argp, struct svc_req *rqstp) {
 	static validate_action_return result;
 	char *acces_token = argp->access_token;
 	if (strcmp(acces_token, NOT_FOUND) == 0) {
 		result.result = "PERMISSION_DENIED";
+		result.acces_token = acces_token;
+		result.refresh_token = "NONE";
+		result.id_client = argp->id;
 		printf("DENY (%s,%s,,0)\n", argp->operation_type, argp->resource);
 		return &result;
 	}
@@ -167,58 +185,84 @@ validate_action_1_svc(action_param *argp, struct svc_req *rqstp) {
 		result.result = "PERMISSION_DENIED";
 	} else {
 		//printf("%s -> %d\n", client->id, client->valability);
-		if (client->valability == 0) {
+		if (client->valability == 0 && client->refresh == 1) {
+			refresh_change new_tokens = refresh(client->refresh_token, id);
+			client->access_token = new_tokens.access;
+			client->refresh_token = new_tokens.refresh;
+			client->valability = max_valability;
+		} else if (client->valability == 0) {
 			result.result = "TOKEN_EXPIRED";
-			if (client->refresh == 1) {
-				printf("DENY (%s,%s,%s,0)\n", argp->operation_type, argp->resource, acces_token);
-			} else {
-				printf("DENY (%s,%s,%s,0)\n", argp->operation_type, argp->resource, acces_token);
-			}
 			printf("DENY (%s,%s,,0)\n", argp->operation_type, argp->resource);
-			return &result;
-		} else {
-			char *resource = argp->resource;
-			client->valability--;
-			//printf("valability: %d\n", client->valability);
-			if (check_resource(resource) == 0) {
-				result.result = "RESOURCE_NOT_FOUND";
+			result.acces_token = acces_token;
+			if (client->refresh == 1) {
+				result.refresh_token = client->refresh_token;
 			} else {
-				char *operation = argp->operation_type;
-				char *permissions = strdup(client->permissions);
-				char *token = strtok(permissions, ",");
-				//printf("PERMISSIONS: %s\n", client->permissions);
-				//printf("letoken: %s\n", token);
-				//printf("resource: %s\n", resource);
-				while (token != NULL) {
-					//printf("crapam aici?\n");
-					if (strcmp(token, resource) == 0) {
-						token = strtok(NULL, ",");
-						//printf("token din cmp: %s\n", token);
-						//printf("operation: %s\n", operation);
-						for (int i = 0; i < strlen(token); i++) {
-							if (token[i] == operation[0]) {
+				result.refresh_token = "NONE";
+			}
+			result.id_client = id;
+			return &result;
+		}
+		char *resource = argp->resource;
+		client->valability--;
+		//printf("valability: %d\n", client->valability);
+		if (check_resource(resource) == 0) {
+			result.result = "RESOURCE_NOT_FOUND";
+		} else {
+			char *operation = argp->operation_type;
+			char *permissions = strdup(client->permissions);
+			char *token = strtok(permissions, ",");
+			//printf("PERMISSIONS: %s\n", client->permissions);
+			//printf("letoken: %s\n", token);
+			//printf("resource: %s\n", resource);
+			while (token != NULL) {
+				//printf("crapam aici?\n");
+				if (strcmp(token, resource) == 0) {
+					token = strtok(NULL, ",");
+					//printf("token din cmp: %s\n", token);
+					//printf("operation: %s\n", operation);
+					for (int i = 0; i < strlen(token); i++) {
+						if (token[i] == operation[0]) {
+							result.result = "PERMISSION_GRANTED";
+							printf("PERMIT (%s,%s,%s,%d)\n", argp->operation_type, argp->resource, client->access_token, client->valability);
+							result.id_client = id;
+							result.acces_token = client->access_token;
+							if (client->refresh == 1) {
+								result.refresh_token = client->refresh_token;
+							} else {
+								result.refresh_token = "NONE";
+							}
+							return &result;
+						} else if (strcmp(operation, EXECUTE) == 0) {
+							if (token[i] == operation[1]) {
 								result.result = "PERMISSION_GRANTED";
-								printf("PERMIT (%s,%s,%s,%d)\n", argp->operation_type, argp->resource, acces_token, client->valability);
-								return &result;
-							} else if (strcmp(operation, EXECUTE) == 0) {
-								if (token[i] == operation[1]) {
-									result.result = "PERMISSION_GRANTED";
-									printf("PERMIT (%s,%s,%s,%d)\n", argp->operation_type, argp->resource, acces_token, client->valability);
-									return &result;
+								printf("PERMIT (%s,%s,%s,%d)\n", argp->operation_type, argp->resource, client->access_token, client->valability);
+								result.id_client = id;
+								result.acces_token = client->access_token;
+								if (client->refresh == 1) {
+									result.refresh_token = client->refresh_token;
+								} else {
+									result.refresh_token = "NONE";
 								}
+								return &result;
 							}
 						}
-						result.result = "OPERATION_NOT_PERMITTED";
-					} else {
-						result.result = "OPERATION_NOT_PERMITTED";
 					}
-					token = strtok(NULL, ",");
+					result.result = "OPERATION_NOT_PERMITTED";
+				} else {
+					result.result = "OPERATION_NOT_PERMITTED";
 				}
+				token = strtok(NULL, ",");
 			}
-
 		}
 	}
-	printf("DENY (%s,%s,%s,%d)\n", argp->operation_type, argp->resource, acces_token, client->valability);
+	printf("DENY (%s,%s,%s,%d)\n", argp->operation_type, argp->resource, client->access_token, client->valability);
+	result.id_client = id;
+	result.acces_token = client->access_token;
+	if (client->refresh == 1) {
+		result.refresh_token = client->refresh_token;
+	} else {
+		result.refresh_token = "NONE";
+	}
 	return &result;
 }
 

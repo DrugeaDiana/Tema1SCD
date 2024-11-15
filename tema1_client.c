@@ -34,7 +34,7 @@ int request_action(client *current_user, int refresh, CLIENT *handle) {
 		printf("REQUEST_DENIED\n");
 		return -2;
 	}
-	free(auth);
+	
 
 	access = malloc(sizeof(req_access_param));
 	access->id = current_user->id;
@@ -58,7 +58,7 @@ int request_action(client *current_user, int refresh, CLIENT *handle) {
 		current_user->access_token = access_refresh->access_token;
 		current_user->refresh_token = access_refresh->refresh_token;
 
-		printf("%s -> %s, %s\n", current_user->auth_token, current_user->access_token, current_user->refresh_token);
+		printf("%s -> %s,%s\n", current_user->auth_token, current_user->access_token, current_user->refresh_token);
 	}
 	free(access);
 	return 1;
@@ -84,6 +84,11 @@ void validate_action(client *current_user, char *resource, char *operation, CLIE
 		return;
 	}
 	printf("%s\n", response->result);
+	if (strcmp(response->acces_token, current_user->access_token) != 0) {
+		current_user->access_token = response->acces_token;
+		current_user->refresh_token = response->refresh_token;
+	}
+
 	free(action);
 }
 
