@@ -21,7 +21,7 @@ int request_action(client *current_user, int refresh, CLIENT *handle) {
 	auth = req_auth_1(&current_user->id, handle);
 	if (auth == NULL) {
 		perror("");
-		return;
+		return -3;
 	}
 	if (auth->valid == -1) {
 		printf("USER_NOT_FOUND\n");
@@ -38,13 +38,36 @@ int request_action(client *current_user, int refresh, CLIENT *handle) {
 	access_return = req_access_1(access, handle);
 	if (access_return == NULL) {
 		perror("");
-		return;
+		return -3;
 	}
 	current_user->access_token = access_return->access_token;
 	free(access);
 
-	printf("%s -> %s\n", current_user->id, current_user->access_token);
+	printf("%s -> %s\n", current_user->auth_token, current_user->access_token);
 	return 1;
+}
+
+void validate_action(client *current_user, char *resource, char *operation, CLIENT *handle, int modified) {
+	action_param *action;
+	char **response;
+	action = malloc(sizeof(action_param));
+	action->operation_type = operation;
+	action->resource = resource;
+	if (modified == 0) {
+		action->access_token = "NOT_FOUND";
+	} else {
+		action->access_token = current_user->access_token;
+	}
+	action->id = current_user->id;
+	//printf("BEGIN %s %s %s %s\n", action->id, action->access_token, resource, operation);
+
+	response = validate_action_1(action, handle);
+	if (response == NULL) {
+		perror("");
+		return;
+	}
+	printf("%s\n", response[0]);
+	free(action);
 }
 
 void parse_action(char *action, client ***clients, int *nr_clients, CLIENT *handle) {
@@ -69,7 +92,7 @@ void parse_action(char *action, client ***clients, int *nr_clients, CLIENT *hand
 				int refresh = atoi(strtok(NULL, ","));
 				if (token != NULL) {
 					int ret = request_action(current_user, refresh, handle);
-					if (ret == -1 || ret == -2) {
+					if (ret == -1 || ret == -2 || ret == -3) {
 						free(current_user);
 						free(action);
 						return;
@@ -83,8 +106,9 @@ void parse_action(char *action, client ***clients, int *nr_clients, CLIENT *hand
 					printf("Invalid request\n");
 				}
 			} else {
-				char *resource = strtok(NULL, ",");
-				printf("Actiune neimplementata inca\n");
+				char *resource = strtok(NULL, ",\n");
+				//printf("%s -> %s -> %s\n", current_user->id, token, resource);
+				validate_action(current_user, resource, token, handle, modified);
 			}
 		}
 	}

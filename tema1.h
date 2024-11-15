@@ -36,6 +36,7 @@ struct req_access_return {
 typedef struct req_access_return req_access_return;
 
 struct action_param {
+	char *id;
 	char *operation_type;
 	char *resource;
 	char *access_token;

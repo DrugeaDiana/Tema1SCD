@@ -52,6 +52,8 @@ xdr_action_param (XDR *xdrs, action_param *objp)
 {
 	register int32_t *buf;
 
+	 if (!xdr_string (xdrs, &objp->id, ~0))
+		 return FALSE;
 	 if (!xdr_string (xdrs, &objp->operation_type, ~0))
 		 return FALSE;
 	 if (!xdr_string (xdrs, &objp->resource, ~0))

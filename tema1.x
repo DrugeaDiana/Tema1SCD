@@ -17,6 +17,7 @@ struct req_access_return{
 };
 
 struct action_param{
+    string id<>;
     string operation_type<>;
     string resource<>;
     string access_token<>;
