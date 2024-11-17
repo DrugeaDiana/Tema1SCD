@@ -368,7 +368,7 @@ req_access_refr_1_svc(req_access_param *argp, struct svc_req *rqstp)
 	result.id = argp->id;
 	result.auth_token = argp->auth_token;
 	result.access_token = generate_access_token(argp->auth_token);
-	result.refresh_token = generate_access_token(client->access_token);
+	result.refresh_token = generate_access_token(result.access_token);
 
 	// Fills up the client variable with all the data generated
 	client->access_token = result.access_token;
