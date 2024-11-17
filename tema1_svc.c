@@ -113,7 +113,8 @@ main (int argc, char **argv)
 		fprintf (stderr, "%s", "unable to register (TEMA1PROG, TEMA1VERS, tcp).");
 		exit(1);
 	}
-	
+
+	// initializing the server
 	init_server(argc, argv);
 	svc_run ();
 	fprintf (stderr, "%s", "svc_run returned");

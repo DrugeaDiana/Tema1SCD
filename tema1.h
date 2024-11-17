@@ -51,13 +51,6 @@ struct action_param {
 };
 typedef struct action_param action_param;
 
-struct approve_req_token_return {
-	char *access_token;
-	char *permisions;
-	int approved;
-};
-typedef struct approve_req_token_return approve_req_token_return;
-
 struct validate_action_return {
 	char *id_client;
 	char *acces_token;
@@ -65,6 +58,13 @@ struct validate_action_return {
 	char *result;
 };
 typedef struct validate_action_return validate_action_return;
+
+struct approve_req_token_return {
+	char *access_token;
+	char *permisions;
+	int approved;
+};
+typedef struct approve_req_token_return approve_req_token_return;
 
 #define TEMA1PROG 0x31122002
 #define TEMA1VERS 1
@@ -114,8 +114,8 @@ extern  bool_t xdr_req_access_param (XDR *, req_access_param*);
 extern  bool_t xdr_req_access_return (XDR *, req_access_return*);
 extern  bool_t xdr_req_access_refresh_return (XDR *, req_access_refresh_return*);
 extern  bool_t xdr_action_param (XDR *, action_param*);
-extern  bool_t xdr_approve_req_token_return (XDR *, approve_req_token_return*);
 extern  bool_t xdr_validate_action_return (XDR *, validate_action_return*);
+extern  bool_t xdr_approve_req_token_return (XDR *, approve_req_token_return*);
 
 #else /* K&R C */
 extern bool_t xdr_req_authorization_return ();
@@ -123,8 +123,8 @@ extern bool_t xdr_req_access_param ();
 extern bool_t xdr_req_access_return ();
 extern bool_t xdr_req_access_refresh_return ();
 extern bool_t xdr_action_param ();
-extern bool_t xdr_approve_req_token_return ();
 extern bool_t xdr_validate_action_return ();
+extern bool_t xdr_approve_req_token_return ();
 
 #endif /* K&R C */
 

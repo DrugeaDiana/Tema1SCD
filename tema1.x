@@ -1,8 +1,8 @@
 /* Request Authorization Struct -> return for the function */
 /* Valid -> wether or not the client actually exists in the database */
 /* Approved -> if the client was approved or not */
-/* Id -> the client's id
-/* Auth_token -> token used for Authorization
+/* Id -> the client's id */
+/* Auth_token -> token used for Authorization */
 struct req_authorization_return{
     string id<>;
     string auth_token<>;
@@ -51,7 +51,7 @@ struct validate_action_return{
 
 /* Return for aproving a client */
 /* Gives the list of permisions of the client as well */
-/* Approved -> 0 if the client is not approved, 1 if it is.
+/* Approved -> 0 if the client is not approved, 1 if it is. */
 struct approve_req_token_return{
     string access_token<>;
     string permisions<>;
